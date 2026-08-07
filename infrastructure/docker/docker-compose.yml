@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  fastapi-backend:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.backend
+    container_name: ecosort_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_NAME=EcoSort AI
+      - APP_ENV=development
+      - DEBUG=True
+      - MONGODB_URI=mongodb://mongodb:27017
+      - MONGODB_DATABASE=ecosort_db
+      - REDIS_URL=redis://redis-cache:6379/0
+      - SECRET_KEY=super_secret_jwt_key_ecosort_ai_sprint_1_change_in_production
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis-cache:
+        condition: service_healthy
+
+  mongodb:
+    image: mongo:7.0
+    container_name: ecosort_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis-cache:
+    image: redis:7-alpine
+    container_name: ecosort_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mongodb_data:

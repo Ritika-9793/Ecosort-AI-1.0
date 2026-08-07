@@ -1,0 +1,18 @@
+{
+  "app_name": "EcoSort AI",
+  "tagline": "Smart Waste Classification & Disposal Guidance for India",
+  "login": "Sign In",
+  "register": "Create Account",
+  "email": "Email Address",
+  "password": "Password",
+  "full_name": "Full Name",
+  "role": "Account Role",
+  "citizen": "General Citizen",
+  "bwg": "School / College / Institution",
+  "vendor": "Scrap Vendor / Recycling Partner",
+  "municipality": "Municipal Officer",
+  "welcome_back": "Welcome Back to EcoSort AI",
+  "dashboard": "Dashboard Overview",
+  "logout": "Log Out",
+  "eco_coins": "Eco-Coins Balance"
+}
