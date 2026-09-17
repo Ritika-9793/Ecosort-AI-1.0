@@ -18,8 +18,12 @@ db_manager = DatabaseManager()
 async def connect_to_databases():
     """Establish async connection to MongoDB Atlas and Redis."""
     try:
-        logger.info("Connecting to MongoDB Atlas...", uri=settings.MONGODB_URI)
-        db_manager.client = AsyncIOMotorClient(settings.MONGODB_URI)
+        logger.info("Connecting to MongoDB...")
+        db_manager.client = AsyncIOMotorClient(
+            settings.MONGODB_URI,
+            serverSelectionTimeoutMS=5000,
+            connectTimeoutMS=5000,
+        )
         db_manager.db = db_manager.client[settings.MONGODB_DATABASE]
         
         # Ping database
@@ -31,8 +35,16 @@ async def connect_to_databases():
         await seed_initial_knowledge_base()
 
     except Exception as e:
-        logger.error("Failed to connect to MongoDB", error=str(e))
-        raise e
+        if db_manager.client:
+            db_manager.client.close()
+        db_manager.client = None
+        db_manager.db = None
+        logger.error("MongoDB connection failed", error=str(e))
+        if settings.APP_ENV.lower() == "production":
+            raise RuntimeError(
+                "MongoDB is required in production. Set MONGODB_URI to a reachable MongoDB deployment."
+            ) from e
+        logger.warning("MongoDB unavailable; development auth fallback is enabled.")
 
     try:
         logger.info("Connecting to Redis Cache...", redis_url=settings.REDIS_URL)
@@ -40,6 +52,9 @@ async def connect_to_databases():
         await db_manager.redis.ping()
         logger.info("Successfully connected to Redis Cache")
     except Exception as e:
+        if db_manager.redis:
+            await db_manager.redis.close()
+        db_manager.redis = None
         logger.warning("Redis connection unavailable, proceeding with in-memory fallback", error=str(e))
 
 
@@ -132,4 +147,15 @@ async def seed_initial_knowledge_base():
 
 def get_db() -> AsyncIOMotorDatabase:
     """Dependency injection helper to get MongoDB database instance."""
+    if db_manager.db is None:
+        from fastapi import HTTPException, status
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database connection is unavailable. Ensure MongoDB service is running."
+        )
+    return db_manager.db
+
+
+def get_optional_db() -> AsyncIOMotorDatabase:
+    """Return the database when available so development fallbacks can be used."""
     return db_manager.db

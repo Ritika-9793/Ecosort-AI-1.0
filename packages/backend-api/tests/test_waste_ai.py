@@ -1,5 +1,13 @@
 import pytest
-from packages.ai_engine.inference.predictor import MobileNetWastePredictor
+try:
+    from packages.ai_engine.inference.predictor import MobileNetWastePredictor
+except ModuleNotFoundError:
+    import sys
+    from pathlib import Path
+    root_dir = str(Path(__file__).resolve().parents[3])
+    if root_dir not in sys.path:
+        sys.path.insert(0, root_dir)
+    from packages.ai_engine.inference.predictor import MobileNetWastePredictor
 
 def test_mobilenet_waste_predictor():
     predictor = MobileNetWastePredictor()

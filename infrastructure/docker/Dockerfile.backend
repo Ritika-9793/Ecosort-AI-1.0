@@ -18,8 +18,9 @@ RUN pip install --no-cache-dir poetry \
     && poetry config virtualenvs.create false \
     && poetry install --no-root --no-interaction --no-ansi
 
-# Copy backend application source code
+# Copy backend application and AI engine source code
 COPY packages/backend-api/app /app/app
+COPY packages/ai_engine /app/packages/ai_engine
 
 # Expose port
 EXPOSE 8000

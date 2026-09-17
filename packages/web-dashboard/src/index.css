@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* EcoSort AI Custom CSS Token System & Glassmorphic Utilities */
 
 :root {

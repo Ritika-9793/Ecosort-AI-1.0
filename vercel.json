@@ -1,0 +1,8 @@
+{
+  "buildCommand": "cd packages/web-dashboard && npm install && npm run build",
+  "outputDirectory": "packages/web-dashboard/dist",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

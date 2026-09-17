@@ -33,7 +33,19 @@ export const RegisterPage: React.FC = () => {
       
       navigate('/login');
     } catch (err: any) {
-      setError(err.response?.data?.error?.details || 'Registration failed.');
+      let msg = 'Registration failed.';
+      if (err.response?.data?.error?.details) {
+        const details = err.response.data.error.details;
+        msg = typeof details === 'string' ? details : JSON.stringify(details);
+      } else if (err.response?.data?.message) {
+        msg = err.response.data.message;
+      } else if (err.response?.data?.detail) {
+        const detail = err.response.data.detail;
+        msg = typeof detail === 'string' ? detail : JSON.stringify(detail);
+      } else if (err.message) {
+        msg = err.message === 'Network Error' ? 'Network Error: Cannot connect to Backend API server (http://localhost:8000). Ensure Backend is running.' : err.message;
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }

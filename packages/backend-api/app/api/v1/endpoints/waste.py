@@ -8,7 +8,16 @@ from app.core.database import get_db
 from app.api.v1.endpoints.users import get_current_user_id
 from app.middleware.upload_validation import validate_image_upload
 from app.schemas.common import ResponseSchema
-from app.services.sustainability_service import SustainabilityService
+import sys
+from pathlib import Path
+_curr = Path(__file__).resolve()
+while _curr.parent != _curr:
+    if (_curr / "packages").exists() or (_curr / ".git").exists():
+        if str(_curr) not in sys.path:
+            sys.path.insert(0, str(_curr))
+        break
+    _curr = _curr.parent
+
 from packages.ai_engine.inference.predictor import MobileNetWastePredictor
 
 router = APIRouter()

@@ -1,6 +1,10 @@
-from typing import List, Union
+from pathlib import Path
+from typing import List, Union, Any
 from pydantic import AnyHttpUrl, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[4]
 
 
 class Settings(BaseSettings):
@@ -25,30 +29,52 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
     
     # CORS Origins
-    CORS_ORIGINS: List[str] = [
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "http://127.0.0.1:5173",
-    ]
+    CORS_ORIGINS: Any = ["*"]
 
     @field_validator("CORS_ORIGINS", mode="before")
-    def parse_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
-            return v
-        raise ValueError(v)
+    def parse_cors_origins(cls, v: Any) -> List[str]:
+        if isinstance(v, str):
+            if not v.strip():
+                return ["*"]
+            if not v.startswith("["):
+                return [i.strip() for i in v.split(",") if i.strip()]
+            try:
+                import json
+                parsed = json.loads(v)
+                return parsed if isinstance(parsed, list) else [str(parsed)]
+            except Exception:
+                return [v]
+        elif isinstance(v, list):
+            return [str(item) for item in v]
+        return ["*"]
 
     # Security & Upload Validation
     MAX_UPLOAD_SIZE_BYTES: int = 5_242_880  # 5 MB
-    ALLOWED_MIME_TYPES: List[str] = ["image/jpeg", "image/png", "image/webp"]
+    ALLOWED_MIME_TYPES: Any = ["image/jpeg", "image/png", "image/webp"]
+
+    @field_validator("ALLOWED_MIME_TYPES", mode="before")
+    def parse_mime_types(cls, v: Any) -> List[str]:
+        if isinstance(v, str):
+            if not v.strip():
+                return ["image/jpeg", "image/png", "image/webp"]
+            if not v.startswith("["):
+                return [i.strip() for i in v.split(",") if i.strip()]
+            try:
+                import json
+                parsed = json.loads(v)
+                return parsed if isinstance(parsed, list) else [str(parsed)]
+            except Exception:
+                return [v]
+        elif isinstance(v, list):
+            return [str(item) for item in v]
+        return ["image/jpeg", "image/png", "image/webp"]
 
     # AI Engine Model Settings
     AI_MODEL_PATH: str = "packages/ai-engine/saved_models/mobilenetv3_waste_v1.tflite"
     MIN_CONFIDENCE_THRESHOLD: float = 0.70
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=str(PROJECT_ROOT / ".env"),
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore"

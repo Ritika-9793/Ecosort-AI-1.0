@@ -54,6 +54,23 @@ docker-compose -f infrastructure/docker/docker-compose.yml up --build
 ```
 The FastAPI backend server will be running at `http://localhost:8000`. Interactive API documentation (Swagger UI) is available at `http://localhost:8000/docs`.
 
+### Production MongoDB Configuration
+
+Production requires a reachable MongoDB deployment. MongoDB Atlas is recommended:
+
+1. Create an Atlas cluster and database user.
+2. Add the deployment IP to the Atlas network access list.
+3. Set these backend environment variables in the production host:
+
+```env
+APP_ENV=production
+MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/?retryWrites=true&w=majority
+MONGODB_DATABASE=ecosort_db
+SECRET_KEY=<long-random-secret>
+```
+
+The backend now fails startup when production MongoDB is unreachable instead of serving requests with missing persistence. Verify the connection with `GET /api/v1/health` after deployment; its MongoDB service must report `healthy`.
+
 ### 3. Run Web Dashboard Locally
 ```bash
 cd packages/web-dashboard

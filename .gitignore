@@ -1,1 +1,37 @@
+# Environment & Secrets
 .env
+.env.local
+.env.*.local
+*.pem
+*.key
+firebase-key.json
+
+# Node dependencies & builds
+node_modules/
+dist/
+build/
+.vite/
+.npm/
+package-lock.json
+
+# Python cache & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+ENV/
+env/
+*.egg-info/
+.mypy_cache/
+
+# IDE & System files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from fastapi import HTTPException, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from app.repositories.user_repository import UserRepository
+from app.repositories.user_repository import InMemoryUserRepository, UserRepository
 from app.schemas.auth import UserRegisterSchema, UserLoginSchema
 from app.core.security import get_password_hash, verify_password, create_access_token, create_refresh_token
 from app.core.config import settings
@@ -11,7 +11,15 @@ class AuthService:
     """Authentication and Authorization Business Engine."""
 
     def __init__(self, db: AsyncIOMotorDatabase):
-        self.user_repo = UserRepository(db)
+        if db is None:
+            if settings.APP_ENV.lower() != "development":
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Database connection is unavailable. Ensure MongoDB service is configured.",
+                )
+            self.user_repo = InMemoryUserRepository()
+        else:
+            self.user_repo = UserRepository(db)
 
     async def register_user(self, payload: UserRegisterSchema) -> dict:
         """Register a new user in the platform."""

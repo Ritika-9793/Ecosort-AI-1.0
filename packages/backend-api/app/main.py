@@ -1,3 +1,15 @@
+import sys
+from pathlib import Path
+
+# Ensure project root (containing 'packages') is in sys.path
+_curr = Path(__file__).resolve()
+while _curr.parent != _curr:
+    if (_curr / "packages").exists() or (_curr / ".git").exists():
+        if str(_curr) not in sys.path:
+            sys.path.insert(0, str(_curr))
+        break
+    _curr = _curr.parent
+
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -38,8 +50,13 @@ app = FastAPI(
 # Setup CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
+    allow_origins=["*"] if "*" in settings.CORS_ORIGINS else settings.CORS_ORIGINS,
+    allow_origin_regex=(
+        r"^https?://(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)(:\d+)?$"
+        if settings.APP_ENV == "development"
+        else None
+    ),
+    allow_credentials=False if "*" in settings.CORS_ORIGINS else True,
     allow_methods=["*"],
     allow_headers=["*"],
 )

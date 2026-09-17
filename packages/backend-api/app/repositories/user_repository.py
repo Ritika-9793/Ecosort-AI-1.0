@@ -4,6 +4,9 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.models.user import UserModel
 
 
+_memory_users: Dict[str, Dict[str, Any]] = {}
+
+
 class UserRepository:
     """Data Access Object (DAO) for MongoDB users collection."""
     
@@ -43,3 +46,26 @@ class UserRepository:
             {"$inc": {"rewards_balance": points_increment}}
         )
         return result.modified_count > 0
+
+
+class InMemoryUserRepository:
+    """Development-only user store used when MongoDB is unavailable."""
+
+    async def get_by_email(self, email: str) -> Optional[Dict[str, Any]]:
+        normalized_email = email.lower()
+        return next(
+            (user for user in _memory_users.values() if user["email"] == normalized_email),
+            None,
+        )
+
+    async def get_by_phone(self, phone: str) -> Optional[Dict[str, Any]]:
+        return next(
+            (user for user in _memory_users.values() if user.get("phone") == phone),
+            None,
+        )
+
+    async def create(self, user_data: Dict[str, Any]) -> str:
+        user_id = str(ObjectId())
+        user_data["_id"] = user_id
+        _memory_users[user_id] = user_data
+        return user_id
